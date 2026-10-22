@@ -1,0 +1,1 @@
+# Tests\nBackend test scaffolding can be extended with mocked provider responses, auth/rate-limit checks, and API integration tests.\n

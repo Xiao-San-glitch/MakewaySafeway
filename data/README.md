@@ -1,0 +1,1 @@
+# Data policy\nUse documented, permitted datasets. Do not commit identifiable reports or precise personal travel histories. Track license, provenance, date, geography, and coverage gaps.\n

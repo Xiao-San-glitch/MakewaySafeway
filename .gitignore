@@ -1,0 +1,10 @@
+.env
+.venv/
+node_modules/
+dist/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+apps/api/app/data/*.db
+ml/models/*
+!ml/models/.gitkeep

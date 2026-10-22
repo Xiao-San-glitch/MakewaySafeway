@@ -1,0 +1,1 @@
+# Model card\nNo trained model weights are included. Training scripts are a starting point only. Use representative labeled data, geographic/time-aware evaluation, calibration, subgroup analysis, privacy controls, and field validation before deployment. Synthetic/example labels are not evidence of safety.\n
