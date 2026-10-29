@@ -1,1 +1,0 @@
-# FastAPI backend\nRouters are separated by feature under `app/api/routes/`. Run `uvicorn app.main:app --reload --port 8000` from this directory. Swagger docs: `/docs`.\n

@@ -1,1 +1,0 @@
-# React frontend\nRun `npm install && npm run dev`. Configure the API base URL in `.env`.\n
