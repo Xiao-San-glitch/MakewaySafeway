@@ -1,0 +1,38 @@
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS and editor files
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Python
+*.py[cod]
+
+# Testing and coverage
+coverage/
+.pytest_cache/
+
+# Local databases
+*.sqlite3
+*.db
