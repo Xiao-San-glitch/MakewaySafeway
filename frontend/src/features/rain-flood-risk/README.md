@@ -1,0 +1,1 @@
+Open-Meteo current weather is connected. The score is an illustrative heuristic, not a validated flood prediction. Official rainfall/river alerts, terrain/drainage and local validation are not yet connected.
