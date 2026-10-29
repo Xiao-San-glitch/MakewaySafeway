@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "type": "waterlogging",
+    "latitude": 24.817,
+    "longitude": 93.936,
+    "note": "Test report only",
+    "source_type": "community_unverified",
+    "status": "unverified",
+    "reported_at": "2026-10-28T20:21:05.500024+00:00"
+  },
+  {
+    "id": 2,
+    "type": "other",
+    "latitude": 26.201624,
+    "longitude": 91.8635123,
+    "note": "lololololololo",
+    "source_type": "community_unverified",
+    "status": "unverified",
+    "reported_at": "2026-10-29T09:29:39.685770+00:00"
+  },
+  {
+    "id": 3,
+    "type": "waterlogging",
+    "latitude": 26.2016708,
+    "longitude": 91.8635379,
+    "note": "",
+    "source_type": "community_unverified",
+    "status": "unverified",
+    "reported_at": "2026-10-29T12:04:28.230809+00:00"
+  }
+]

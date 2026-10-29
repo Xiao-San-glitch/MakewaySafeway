@@ -1,0 +1,168 @@
+.hazard-alerts {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid rgba(102, 226, 194, 0.2);
+  border-radius: 16px;
+  background: rgba(13, 35, 29, 0.88);
+  color: #edf7f3;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.hazard-alerts h3 {
+  margin: 0 0 16px;
+  color: #61e0bd;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.hazard-alert-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.hazard-alerts button {
+  padding: 9px 13px;
+  border: 1px solid rgba(102, 226, 194, 0.35);
+  border-radius: 9px;
+  background: #123d32;
+  color: #eafff7;
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.hazard-alerts button:hover:not(:disabled) {
+  background: #17604d;
+  border-color: #61e0bd;
+}
+
+.hazard-alerts button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.hazard-alerts > p {
+  color: #b9ccc5;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.hazard-alerts > p[role="status"] {
+  color: #ffb9a9;
+}
+
+.hazard-alert-list {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hazard-alert-card {
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-left: 4px solid #61e0bd;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.hazard-alert-card[data-type="flood"],
+.hazard-alert-card[data-type="waterlogging"] {
+  border-left-color: #45b8f0;
+}
+
+.hazard-alert-card[data-type="crash"],
+.hazard-alert-card[data-type="road_closure"] {
+  border-left-color: #ff7777;
+}
+
+.hazard-alert-card[data-type="other"] {
+  border-left-color: #f0c36b;
+}
+
+.hazard-alert-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.hazard-alert-card-header strong {
+  color: #f3fbf8;
+  font-size: 1rem;
+}
+
+.hazard-alert-distance {
+  color: #75dfc2;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.hazard-alert-description {
+  margin: 0 0 10px;
+  color: #d3e0db;
+  font-size: 0.93rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.hazard-alert-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.hazard-alert-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(240, 195, 107, 0.13);
+  color: #f0d18d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.hazard-alert-status[data-status="verified"],
+.hazard-alert-status[data-status="confirmed"] {
+  background: rgba(97, 224, 189, 0.13);
+  color: #80e7ca;
+}
+
+.hazard-alert-source {
+  color: #9aafa7;
+  font-size: 0.78rem;
+}
+
+.hazard-alert-empty {
+  margin-top: 16px;
+  padding: 15px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #c7d7d0;
+}
+
+@media (max-width: 600px) {
+  .hazard-alerts {
+    margin: 18px 0;
+    padding: 16px;
+  }
+
+  .hazard-alert-card {
+    padding: 12px;
+  }
+
+  .hazard-alert-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

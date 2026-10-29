@@ -1,0 +1,73 @@
+/* Place autocomplete dropdowns for the journey form */
+.place-suggestions {
+  display: grid;
+  gap: 4px;
+  margin: -8px 0 12px;
+  padding: 6px;
+  border: 1px solid var(--border, rgba(120, 160, 150, .25));
+  border-radius: 12px;
+  background: var(--card, #0d211c);
+  max-height: 220px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 20;
+}
+.place-suggestion {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: left;
+  line-height: 1.4;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+.place-suggestion:hover,
+.place-suggestion:focus-visible {
+  background: rgba(54, 211, 174, .14);
+  outline: 2px solid rgba(54, 211, 174, .35);
+}
+.direct-distance {
+  display: block;
+  margin-top: 6px;
+  font-size: .75rem;
+}
+
+
+/* Alternative driving route selector */
+.available-routes {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.route-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.route-option strong {
+  font-size: 0.95rem;
+}
+
+.route-option small {
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.route-option-active {
+  border: 2px solid #22c7a9;
+}
+
+.route-option:focus-visible {
+  outline: 2px solid #22c7a9;
+  outline-offset: 3px;
+}
