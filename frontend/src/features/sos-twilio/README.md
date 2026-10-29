@@ -1,1 +1,0 @@
-SOS requires confirmation and backend/.env contacts. Real SMS is disabled by default; configure Twilio and set ENABLE_REAL_SMS=true only after testing. Add authentication, rate limiting and delivery callbacks before public deployment.
