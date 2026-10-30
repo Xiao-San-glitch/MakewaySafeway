@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getHazards } from '../../api.js';
 import './HazardAlerts.css';
 
 const CHECK_INTERVAL = 30000;
@@ -61,6 +62,74 @@ function playAlertSound() {
   }
 }
 
+/**
+ * Fetch hazards from the API, filter/sort them, and return the
+ * processed list.  This is a pure data-fetch helper with no
+ * dependency on React effect lifecycle so it can be called safely
+ * from both the automatic interval *and* a manual refresh.
+ */
+async function fetchAndProcessHazards(currentLocation, radiusKm) {
+  const hasLocation =
+    currentLocation != null &&
+    Number.isFinite(Number(currentLocation.latitude)) &&
+    Number.isFinite(Number(currentLocation.longitude));
+
+  const data = await getHazards();
+
+  const hazards = Array.isArray(data.hazards)
+    ? data.hazards
+    : Array.isArray(data)
+      ? data
+      : [];
+
+  const activeHazards = hazards
+    .filter((hazard) => {
+      if (
+        !Number.isFinite(Number(hazard.latitude)) ||
+        !Number.isFinite(Number(hazard.longitude))
+      ) {
+        return false;
+      }
+
+      if (
+        ['resolved', 'rejected', 'expired'].includes(
+          String(hazard.status || '').toLowerCase()
+        )
+      ) {
+        return false;
+      }
+
+      if (!hasLocation) return true;
+
+      const distance = distanceKm(
+        Number(currentLocation.latitude),
+        Number(currentLocation.longitude),
+        Number(hazard.latitude),
+        Number(hazard.longitude)
+      );
+
+      return distance <= radiusKm;
+    })
+    .map((hazard) => ({
+      ...hazard,
+      distance_km: hasLocation
+        ? distanceKm(
+            Number(currentLocation.latitude),
+            Number(currentLocation.longitude),
+            Number(hazard.latitude),
+            Number(hazard.longitude)
+          )
+        : null,
+    }))
+    .sort((a, b) => {
+      if (a.distance_km == null) return 1;
+      if (b.distance_km == null) return -1;
+      return a.distance_km - b.distance_km;
+    });
+
+  return activeHazards;
+}
+
 export default function HazardAlerts({
   location,
   enabled = true,
@@ -73,11 +142,12 @@ export default function HazardAlerts({
   const [refreshing, setRefreshing] = useState(false);
   const [lastChecked, setLastChecked] = useState(null);
 
-  const refreshRef = useRef(null);
   const notifiedIds = useRef(new Set());
   const firstCheck = useRef(true);
   const locationRef = useRef(location);
   const soundEnabledRef = useRef(soundEnabled);
+  const radiusRef = useRef(radiusKm);
+  const notificationEnabledRef = useRef(notificationEnabled);
 
   useEffect(() => {
     locationRef.current = location;
@@ -86,6 +156,14 @@ export default function HazardAlerts({
   useEffect(() => {
     soundEnabledRef.current = soundEnabled;
   }, [soundEnabled]);
+
+  useEffect(() => {
+    radiusRef.current = radiusKm;
+  }, [radiusKm]);
+
+  useEffect(() => {
+    notificationEnabledRef.current = notificationEnabled;
+  }, [notificationEnabled]);
 
   const enableNotifications = useCallback(async () => {
     if (!('Notification' in window)) {
@@ -107,153 +185,117 @@ export default function HazardAlerts({
     }
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
+  /**
+   * Shared handler: fetch hazards, update state, and optionally
+   * fire notifications.  Returns early without updating state when
+   * `cancelled` is true (used only by the auto-polling effect to
+   * avoid stale writes after unmount).
+   */
+  const processHazards = useCallback(async (cancelled = false) => {
+    try {
+      const activeHazards = await fetchAndProcessHazards(
+        locationRef.current,
+        radiusRef.current
+      );
 
-    async function checkHazards() {
-      const currentLocation = locationRef.current;
+      // If the calling effect has been cleaned up, skip state updates.
+      if (cancelled) return;
 
-      const hasLocation =
-        currentLocation != null &&
-        Number.isFinite(Number(currentLocation.latitude)) &&
-        Number.isFinite(Number(currentLocation.longitude));
+      setNearbyHazards(activeHazards);
+      setLastChecked(new Date());
+      setError('');
 
-      try {
-        const response = await fetch('/api/hazards');
+      const isFirstCheck = firstCheck.current;
+      firstCheck.current = false;
 
-        if (!response.ok) {
-          throw new Error(`Hazard request failed: ${response.status}`);
-        }
+      // Do not sound an alert for existing reports on initial load.
+      if (isFirstCheck) {
+        activeHazards.forEach((hazard) => {
+          notifiedIds.current.add(
+            String(
+              hazard.id ??
+                [
+                  hazard.type,
+                  hazard.latitude,
+                  hazard.longitude,
+                  hazard.reported_at || '',
+                ].join('-')
+            )
+          );
+        });
+        return;
+      }
 
-        const data = await response.json();
-        if (cancelled) return;
-
-        const hazards = Array.isArray(data.hazards) ? data.hazards : [];
-
-        const activeHazards = hazards
-          .filter((hazard) => {
-            if (
-              !Number.isFinite(Number(hazard.latitude)) ||
-              !Number.isFinite(Number(hazard.longitude))
-            ) {
-              return false;
-            }
-
-            if (
-              ['resolved', 'rejected', 'expired'].includes(
-                String(hazard.status || '').toLowerCase()
-              )
-            ) {
-              return false;
-            }
-
-            if (!hasLocation) return true;
-
-            const distance = distanceKm(
-              Number(currentLocation.latitude),
-              Number(currentLocation.longitude),
-              Number(hazard.latitude),
-              Number(hazard.longitude)
-            );
-
-            return distance <= radiusKm;
-          })
-          .map((hazard) => ({
-            ...hazard,
-            distance_km: hasLocation
-              ? distanceKm(
-                  Number(currentLocation.latitude),
-                  Number(currentLocation.longitude),
-                  Number(hazard.latitude),
-                  Number(hazard.longitude)
-                )
-              : null,
-          }))
-          .sort((a, b) => {
-            if (a.distance_km == null) return 1;
-            if (b.distance_km == null) return -1;
-            return a.distance_km - b.distance_km;
-          });
-
-        setNearbyHazards(activeHazards);
-        setLastChecked(new Date());
-        setError('');
-
-        const isFirstCheck = firstCheck.current;
-        firstCheck.current = false;
-
-        // Do not sound an alert for existing reports on initial load.
-        if (isFirstCheck) {
-          activeHazards.forEach((hazard) => {
-            notifiedIds.current.add(String(hazard.id ?? [
+      for (const hazard of activeHazards) {
+        const id = String(
+          hazard.id ??
+            [
               hazard.type,
               hazard.latitude,
               hazard.longitude,
               hazard.reported_at || '',
-            ].join('-')));
-          });
-          return;
-        }
+            ].join('-')
+        );
 
-        for (const hazard of activeHazards) {
-          const id = String(hazard.id ?? [
-            hazard.type,
-            hazard.latitude,
-            hazard.longitude,
-            hazard.reported_at || '',
-          ].join('-'));
+        if (notifiedIds.current.has(id)) continue;
+        notifiedIds.current.add(id);
 
-          if (notifiedIds.current.has(id)) continue;
-          notifiedIds.current.add(id);
-
-          const label = HAZARD_LABELS[hazard.type] || 'Road Hazard';
-          const distanceText = hazard.distance_km == null
+        const label = HAZARD_LABELS[hazard.type] || 'Road Hazard';
+        const distanceText =
+          hazard.distance_km == null
             ? 'Location distance unavailable; enable GPS to check proximity.'
             : `${hazard.distance_km.toFixed(1)} km away.`;
 
-          if (
-            notificationEnabled &&
-            'Notification' in window &&
-            Notification.permission === 'granted'
-          ) {
-            new Notification(`MakeWaySafeWay: ${label}`, {
-              body: `${hazard.note || hazard.description || 'A hazard was reported.'} ${distanceText}`,
-              tag: `mws-hazard-${id}`,
-            });
-          }
+        if (
+          notificationEnabledRef.current &&
+          'Notification' in window &&
+          Notification.permission === 'granted'
+        ) {
+          new Notification(`MakeWaySafeWay: ${label}`, {
+            body: `${hazard.note || hazard.description || 'A hazard was reported.'} ${distanceText}`,
+            tag: `mws-hazard-${id}`,
+          });
+        }
 
-          if (soundEnabledRef.current) {
-            playAlertSound();
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-          }
+        if (soundEnabledRef.current) {
+          playAlertSound();
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
         }
-      } catch (fetchError) {
-        if (!cancelled) {
-          console.error('Hazard alert check failed:', fetchError);
-          setError('Unable to check nearby hazards.');
-        }
+      }
+    } catch (fetchError) {
+      if (!cancelled) {
+        console.error('Hazard alert check failed:', fetchError);
+        setError('Unable to check nearby hazards.');
       }
     }
+  }, []);
 
-    refreshRef.current = async () => {
-      setRefreshing(true);
-      try {
-        await checkHazards();
-      } finally {
-        setRefreshing(false);
-      }
-    };
+  // Manual refresh — never guarded by `cancelled`.
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await processHazards(false);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [processHazards]);
 
-    checkHazards();
+  // Auto-polling effect.
+  useEffect(() => {
+    let cancelled = false;
 
-    const timer = window.setInterval(checkHazards, CHECK_INTERVAL);
+    // Initial check.
+    processHazards(false);
+
+    const timer = window.setInterval(() => {
+      if (!cancelled) processHazards(cancelled);
+    }, CHECK_INTERVAL);
 
     return () => {
       cancelled = true;
       window.clearInterval(timer);
-      refreshRef.current = null;
     };
-  }, [radiusKm, notificationEnabled]);
+  }, [processHazards]);
 
   const hasLocation =
     location != null &&
@@ -267,7 +309,7 @@ export default function HazardAlerts({
       <div className="hazard-alert-controls">
         <button
           type="button"
-          onClick={() => refreshRef.current?.()}
+          onClick={handleRefresh}
           disabled={refreshing}
         >
           {refreshing ? 'Checking…' : 'Refresh Hazards'}
